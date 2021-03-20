@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+./bin/start-db && \
+./bin/start-redis

@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+#
+# --publish 5555:5432 for starting rails server from the host.
+#
+
+docker run --rm --detach \
+  --name weblog-db \
+  --env POSTGRES_PASSWORD=postgres \
+  --env POSTGRES_USER=postgres \
+  --network weblog-bridge-docker-network \
+  --mount source=weblog-db-data,target=/var/lib/postgresql/data \
+  postgres:13.2-alpine

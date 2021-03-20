@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+docker run --rm --detach \
+ --name weblog-redis \
+ --network weblog-bridge-docker-network \
+ --mount source=weblog-redis-data,target=/var/lib/redis/data \
+ redis:6.2.1-alpine3.13
