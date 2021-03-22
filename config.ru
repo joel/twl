@@ -3,7 +3,7 @@
 require_relative "config/environment"
 
 begin
-  require 'pry'
+  require "pry"
 rescue LoadError
 end
 
