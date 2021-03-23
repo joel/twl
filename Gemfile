@@ -39,6 +39,8 @@ group :development, :test do
   gem "pry-byebug", platforms: [:mri, :mingw, :x64_mingw]
   gem "standard"
   gem "brakeman"
+  gem "ffaker"
+  gem "factory_bot_rails"
 end
 
 group :development do

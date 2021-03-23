@@ -7,5 +7,6 @@ docker run --rm \
   --network weblog-bridge-docker-network \
   --publish 3005:3000 \
   --volume weblog-dev-bundle-volume:/bundle \
+  --volume /dev/shm:/dev/shm \
   --mount type=bind,source=$PWD,target=/work \
   -it joel/weblog:app sh
