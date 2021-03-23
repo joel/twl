@@ -1,11 +1,32 @@
 #!/usr/bin/env bash
 
-docker run --rm \
-  --name weblog-dev-app \
-  --env REDIS_URL=redis://weblog-redis:6379/1 \
-  --env DB_HOST=weblog-db \
-  --network weblog-bridge-docker-network \
-  --publish 3005:3000 \
-  --volume weblog-dev-bundle-volume:/bundle \
-  --mount type=bind,source=$PWD,target=/work \
-  joel/weblog:app bin/rails server -p 3000 --early-hints -b 0.0.0.0
+if [[ -n $1 && $1 == 'production' ]]
+then
+  echo '==============================================='
+  echo '========== START PRODUCTION SERVER ============'
+  echo '==============================================='
+
+  docker run --rm --detach \
+    --name weblog-prod-app \
+    --env REDIS_URL=redis://weblog-redis:6379/1 \
+    --env DATABASE_URL="postgres://postgres:postgres@weblog-db:5432/weblog_production?pool=5" \
+    --env RAILS_LOG_TO_STDOUT=true \
+    --env LOG_LEVEL=debug \
+    --network weblog-bridge-docker-network \
+    --publish 3010:3000 \
+    joel/weblog:prod bin/rails server -p 3000 --early-hints -b 0.0.0.0
+
+else
+	echo "Start development server"
+
+  docker run --rm --detach \
+    --name weblog-dev-app \
+    --env DB_HOST=weblog-db \
+    --env RAILS_LOG_TO_STDOUT=true \
+    --env LOG_LEVEL=debug \
+    --env LOG_APPENDER=true \
+    --network weblog-bridge-docker-network \
+    --publish 3005:3000 \
+    --mount type=bind,source=$PWD,target=/work \
+    joel/weblog:dev bin/rails server -p 3000 --early-hints -b 0.0.0.0
+fi

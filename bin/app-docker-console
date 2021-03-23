@@ -1,12 +1,32 @@
 #!/usr/bin/env bash
 
-docker run --rm \
-  --name weblog-dev-app \
-  --env REDIS_URL=redis://weblog-redis:6379/1 \
-  --env DB_HOST=weblog-db \
-  --network weblog-bridge-docker-network \
-  --publish 3005:3000 \
-  --volume weblog-dev-bundle-volume:/bundle \
-  --volume /dev/shm:/dev/shm \
-  --mount type=bind,source=$PWD,target=/work \
-  -it joel/weblog:app sh
+#!/usr/bin/env bash
+
+if [[ -n $1 && $1 == 'production' ]]
+then
+  echo '==============================================='
+  echo '========== START PRODUCTION CONSOLE ============'
+  echo '==============================================='
+
+  docker run --rm \
+    --name weblog-prod-console \
+    --env REDIS_URL=redis://weblog-redis:6379/1 \
+    --env DATABASE_URL="postgres://postgres:postgres@weblog-db:5432/weblog_production?pool=5" \
+    --env RAILS_LOG_TO_STDOUT=true \
+    --env LOG_LEVEL=debug \
+    --network weblog-bridge-docker-network \
+    -it joel/weblog:prod sh
+
+else
+	echo "Start development console"
+
+  docker run --rm \
+    --name weblog-dev-console \
+    --env DB_HOST=weblog-db \
+    --env RAILS_LOG_TO_STDOUT=true \
+    --env LOG_LEVEL=debug \
+    --env LOG_APPENDER=true \
+    --network weblog-bridge-docker-network \
+    --mount type=bind,source=$PWD,target=/work \
+    -it joel/weblog:dev sh
+fi

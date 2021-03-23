@@ -2,7 +2,7 @@
 
 if [[ -n $1 && $1 == 'production' ]]
 then
-  docker logs --follow weblog-dev-app
-else
   docker logs --follow weblog-prod-app
+else
+  docker logs --follow weblog-dev-app
 fi

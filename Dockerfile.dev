@@ -1,9 +1,4 @@
-FROM ruby:3.0.0-alpine3.13
-
-LABEL maintener='joel.azemar@gmail.com'
-LABEL com.example.version="0.0.1-beta"
-LABEL vendor="ACME Incorporated"
-LABEL com.example.release-date="2021-03-20"
+FROM ruby:3.0.0-alpine3.13 as intermediate
 
 RUN apk add --no-cache --update \
     # Nokogori compilation
@@ -47,7 +42,7 @@ ENV BUNDLE_WITHOUT production
 ENV BUNDLE_CACHE_ALL true
 ENV RAILS_ENV development
 ENV RACK_ENV development
-ENV APP_PATH /work
+ENV APP_PATH /src
 
 WORKDIR $APP_PATH
 
@@ -56,4 +51,33 @@ COPY Gemfile.lock $APP_PATH
 
 RUN gem install bundler -v $BUNDLER_VERSION
 
-ENTRYPOINT ["./docker-entrypoint.sh"]
+RUN bundle install
+
+# Second Image
+FROM ruby:3.0.0-alpine3.13
+
+RUN apk add --no-cache --update \
+    nodejs \
+    yarn \
+    tzdata \
+    postgresql=~13
+
+ENV BUNDLER_VERSION 2.2.14
+ENV BUNDLE_PATH /bundle
+ENV GEM_HOME /bundle
+ENV BUNDLE_JOBS 20
+ENV BUNDLE_RETRY 5
+ENV BUNDLE_WITHOUT production
+ENV BUNDLE_CACHE_ALL true
+ENV RAILS_ENV development
+ENV RACK_ENV development
+ENV APP_PATH /work
+
+WORKDIR $APP_PATH
+
+COPY --from=intermediate /bundle /bundle
+
+COPY Gemfile $APP_PATH
+COPY Gemfile.lock $APP_PATH
+
+RUN bundle install

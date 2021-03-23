@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+if [[ -n $1 && $1 == 'production' ]]
+then
+  echo '==============================================='
+  echo '========== BUILD PRODUCTION IMAGE ============'
+  echo '==============================================='
+
+  docker build --squash \
+  --tag joel/weblog:prod \
+  --build-arg SECRET_KEY_BASE_VALUE=1 \
+  .
+  # --secret id=master_key,src=config/master.key \
+  # .
+
+else
+	echo "Build development image"
+
+  docker build --squash \
+  --tag joel/weblog:dev \
+  . -f Dockerfile.dev
+fi
