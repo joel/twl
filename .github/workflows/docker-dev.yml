@@ -1,9 +1,9 @@
-name: Docker
+name: Docker Dev
 
 on: [push,pull_request]
 
 jobs:
-  docker:
+  docker-dev:
     name: Build Docker Dev Image
     runs-on: ubuntu-latest
     steps:

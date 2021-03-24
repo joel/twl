@@ -1,9 +1,9 @@
-name: Docker
+name: Docker Prod
 
 on: [push,pull_request]
 
 jobs:
-  docker:
+  docker-prod:
     name: Build Docker Prod Image
     runs-on: ubuntu-latest
     steps:
