@@ -4,8 +4,22 @@ on: [push,pull_request]
 
 jobs:
   test:
-    name: Run Test Suite
+    strategy:
+      fail-fast: false
+      matrix:
+        ruby-version:  [ '3.0.0', 'ruby-head' ]
+        rails-version: [ '6.1.3', 'main' ]
+        node-version:  [ '15' ]
+
+    name: Test against Ruby ${{ matrix.ruby-version }} / Rails ${{ matrix.rails-version }} / NodeJs ${{ matrix.node-version }}
     runs-on: ubuntu-latest
+
+    env:
+      RAILS_BRANCH: ${{ matrix.rails-version }}
+      RUBY_VERSION: ${{ matrix.ruby-version }}
+      DB_HOST: localhost
+      DB_PASSWORD: pg_password
+      DB_PORT: 5432
 
     # Services
     services:
@@ -33,7 +47,7 @@ jobs:
     - name: Set up Ruby
       uses: ruby/setup-ruby@v1
       with:
-        ruby-version: 3.0.0
+        ruby-version: ${{ job.test.env.RUBY_VERSION }}
 
     - name: Cache gems
       uses: actions/cache@v1
@@ -44,7 +58,11 @@ jobs:
           ${{ runner.os }}-test-
 
     - name: Install Ruby dependencies
+      env:
+        MATRIX_RAILS_VERSION: ${{ matrix.rails-version }}
       run: |
+        export BUNDLE_GEMFILE="${GITHUB_WORKSPACE}/gemfiles/rails_${MATRIX_RAILS_VERSION}.gemfile"
+        rm -rf Gemfile.lock
         sudo apt-get --assume-yes install libpq-dev
         gem install bundler:2.2.14
         bundle config path vendor/bundle
@@ -64,10 +82,11 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-yarn-
 
-    - name: Install NodeJs
+    - name: Install NodeJs ${{ matrix.node-version }}
       uses: actions/setup-node@v2.1.5
       with:
-        node-version: 15.5.1
+        node-version: ${{ matrix.node-version }}
+        check-latest: true
 
     - name: Cache Node Modules
       uses: actions/cache@v2.1.4
@@ -77,27 +96,19 @@ jobs:
 
     - name: Install Js dependencies
       if: steps.yarn-cache.outputs.cache-hit != 'true'
-      run: yarn --frozen-lockfile
+      run: |
+        echo "NODE VERSION: $(node -v)"
+        yarn --frozen-lockfile
 
     - name: Create database
       run: bundle exec rails db:create db:migrate
       env:
         RAILS_ENV: test
-        DB_HOST: localhost
-        DB_PASSWORD: pg_password
-        DB_PORT: 5432
 
     - name: Run Unit Tests
       run: bundle exec rails test
-      env:
-        DB_HOST: localhost
-        DB_PORT: 5432
-        DB_PASSWORD: pg_password
 
     - name: Run System tests
       run: bundle exec rails test:system
       env:
         CHROME_HEADLESS: true
-        DB_HOST: localhost
-        DB_PORT: 5432
-        DB_PASSWORD: pg_password
