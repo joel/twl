@@ -7,6 +7,7 @@ LABEL com.example.release-date="2021-03-08"
 
 # Minimal requirements to run a Rails app
 RUN apk add --no-cache --update build-base \
+  shared-mime-info \
   linux-headers \
   git \
   postgresql-dev=~13 \

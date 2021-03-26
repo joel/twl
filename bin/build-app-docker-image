@@ -8,7 +8,6 @@ then
 
   docker build --squash \
   --tag joel/weblog:prod \
-  --build-arg SECRET_KEY_BASE_VALUE=1 \
   .
   # --secret id=master_key,src=config/master.key \
   # .
