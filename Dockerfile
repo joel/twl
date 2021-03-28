@@ -53,7 +53,9 @@ ADD . $APP_PATH
 
 RUN SECRET_KEY_BASE="1" rails assets:precompile --trace && \
   yarn cache clean && \
-  rm -rf node_modules tmp/cache vendor/assets spec
+  rm -rf node_modules vendor/assets spec
+
+RUN bundle exec bootsnap precompile --gemfile app/ lib/
 
 FROM ruby:3.0.0-alpine3.13
 
