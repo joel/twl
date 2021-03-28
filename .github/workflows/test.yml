@@ -12,6 +12,10 @@ jobs:
         node-version:  [ '15' ]
         experimental:  [ false ]
         include:
+          - ruby-version: '3.0.0'
+            rails-version: 'main'
+            node-version: '15'
+            experimental: true
           - ruby-version: 'ruby-head'
             rails-version: '6.1.3'
             node-version: '15'
