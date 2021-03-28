@@ -28,8 +28,10 @@ jobs:
     name: Test against Ruby ${{ matrix.ruby-version }} / Rails ${{ matrix.rails-version }} / NodeJs ${{ matrix.node-version }}
     runs-on: ubuntu-latest
 
+    continue-on-error: ${{ endsWith(matrix.ruby-version, 'head') || matrix.rails-version == 'main' }}
+
     env:
-      RAILS_BRANCH: ${{ matrix.rails-version }}
+      RAILS_VERSION: ${{ matrix.rails-version }}
       RUBY_VERSION: ${{ matrix.ruby-version }}
       DB_HOST: localhost
       DB_PASSWORD: pg_password
@@ -62,20 +64,23 @@ jobs:
       uses: ruby/setup-ruby@v1
       with:
         ruby-version: ${{ job.test.env.RUBY_VERSION }}
+        # bundler-cache: true
 
-    - name: Cache gems
-      uses: actions/cache@v1
-      with:
-        path: vendor/bundle
-        key: ${{ runner.os }}-test-${{ hashFiles('**/Gemfile.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-test-
+    # Cache Can't Apply Because HashFiles Can't Receive Dynamic Value From The Matrix
+    # - name: Cache gems
+    #   uses: actions/cache@v1
+    #   with:
+    #     path: vendor/bundle
+    #     key: ${{ runner.os }}-test-${{ hashFiles('**/Gemfile.lock') }}
+    #     restore-keys: |
+    #       ${{ runner.os }}-test-
 
     - name: Install Ruby dependencies
       env:
         MATRIX_RAILS_VERSION: ${{ matrix.rails-version }}
       run: |
         export BUNDLE_GEMFILE="${GITHUB_WORKSPACE}/gemfiles/rails_${MATRIX_RAILS_VERSION}.gemfile"
+        echo "BUNDLE_GEMFILE: [${BUNDLE_GEMFILE}]"
         rm -rf Gemfile.lock
         sudo apt-get --assume-yes install libpq-dev
         gem install bundler:'>= 2.2.x'
@@ -115,14 +120,27 @@ jobs:
         yarn --frozen-lockfile
 
     - name: Create database
-      run: bundle exec rails db:create db:migrate
       env:
         RAILS_ENV: test
+        MATRIX_RAILS_VERSION: ${{ matrix.rails-version }}
+      run: |
+        export BUNDLE_GEMFILE="${GITHUB_WORKSPACE}/gemfiles/rails_${MATRIX_RAILS_VERSION}.gemfile"
+        echo "BUNDLE_GEMFILE: [${BUNDLE_GEMFILE}]"
+        bundle exec rails db:create db:migrate
 
     - name: Run Unit Tests
-      run: bundle exec rails test
+      env:
+        MATRIX_RAILS_VERSION: ${{ matrix.rails-version }}
+      run: |
+        export BUNDLE_GEMFILE="${GITHUB_WORKSPACE}/gemfiles/rails_${MATRIX_RAILS_VERSION}.gemfile"
+        echo "BUNDLE_GEMFILE: [${BUNDLE_GEMFILE}]"
+        bundle exec rails test
 
     - name: Run System tests
-      run: bundle exec rails test:system
       env:
         CHROME_HEADLESS: true
+        MATRIX_RAILS_VERSION: ${{ matrix.rails-version }}
+      run: |
+        export BUNDLE_GEMFILE="${GITHUB_WORKSPACE}/gemfiles/rails_${MATRIX_RAILS_VERSION}.gemfile"
+        echo "BUNDLE_GEMFILE: [${BUNDLE_GEMFILE}]"
+        bundle exec rails test:system
