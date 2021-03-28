@@ -7,6 +7,7 @@ LABEL com.example.release-date="2021-03-08"
 
 # Minimal requirements to run a Rails app
 RUN apk add --no-cache --update build-base \
+  # https://github.com/rails/rails/issues/41750
   shared-mime-info \
   linux-headers \
   git \
