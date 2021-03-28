@@ -7,9 +7,19 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        ruby-version:  [ '3.0.0', 'ruby-head' ]
-        rails-version: [ '6.1.3', 'main' ]
+        ruby-version:  [ '3.0.0' ]
+        rails-version: [ '6.1.3' ]
         node-version:  [ '15' ]
+        experimental:  [ false ]
+        include:
+          - ruby-version: 'ruby-head'
+            rails-version: '6.1.3'
+            node-version: '15'
+            experimental: true
+          - ruby-version: 'ruby-head'
+            rails-version: 'main'
+            node-version: '15'
+            experimental: true
 
     name: Test against Ruby ${{ matrix.ruby-version }} / Rails ${{ matrix.rails-version }} / NodeJs ${{ matrix.node-version }}
     runs-on: ubuntu-latest
