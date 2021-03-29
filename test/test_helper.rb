@@ -13,5 +13,6 @@ class ActiveSupport::TestCase
   include FactoryBot::Syntax::Methods
 
   # Run tests in parallel with specified workers
-  parallelize(workers: :number_of_processors)
+  # parallelize(workers: :number_of_processors)
+  parallelize(workers: 1)
 end

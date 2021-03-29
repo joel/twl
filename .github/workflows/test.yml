@@ -67,6 +67,7 @@ jobs:
         # bundler-cache: true
 
     # Cache Can't Apply Because HashFiles Can't Receive Dynamic Value From The Matrix
+    # https://github.community/t/is-hashfiles-of-actions-cache-can-be-dynamic/171342
     # - name: Cache gems
     #   uses: actions/cache@v1
     #   with:
