@@ -24,6 +24,10 @@ jobs:
             rails-version: 'main'
             node-version: '15'
             experimental: true
+          - ruby-version: 'debug'
+            rails-version: 'main'
+            node-version: '15'
+            experimental: true
 
     name: Run Test Suite + System
     runs-on: ubuntu-latest
@@ -31,8 +35,8 @@ jobs:
     continue-on-error: ${{ endsWith(matrix.ruby-version, 'head') || matrix.rails-version == 'main' }}
 
     env:
-      RAILS_VERSION: ${{ matrix.rails-version }}
-      RUBY_VERSION: ${{ matrix.ruby-version }}
+      BUNDLE_GEMFILE: "${{ github.workspace }}/gemfiles/rails_${{ matrix.rails-version }}.gemfile"
+      BUNDLE_PATH: vendor/bundle
       DB_HOST: localhost
       DB_PASSWORD: pg_password
       DB_PORT: 5432
@@ -60,34 +64,28 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: Set up Ruby
+    - name: Set up Ruby ${{ matrix.ruby-version }}
       uses: ruby/setup-ruby@v1
       with:
-        ruby-version: ${{ job.test.env.RUBY_VERSION }}
-        # bundler-cache: true
+        ruby-version: ${{ matrix.ruby-version }}
+        bundler-cache: true
 
-    # Cache Can't Apply Because HashFiles Can't Receive Dynamic Value From The Matrix
-    # https://github.community/t/is-hashfiles-of-actions-cache-can-be-dynamic/171342
-    # - name: Cache gems
-    #   uses: actions/cache@v1
-    #   with:
-    #     path: vendor/bundle
-    #     key: ${{ runner.os }}-test-${{ hashFiles('**/Gemfile.lock') }}
-    #     restore-keys: |
-    #       ${{ runner.os }}-test-
-
-    - name: Install Ruby dependencies
-      env:
-        MATRIX_RAILS_VERSION: ${{ matrix.rails-version }}
+    - name: Install Last Version of Bundler
       run: |
-        export BUNDLE_GEMFILE="${GITHUB_WORKSPACE}/gemfiles/rails_${MATRIX_RAILS_VERSION}.gemfile"
-        echo "BUNDLE_GEMFILE: [${BUNDLE_GEMFILE}]"
-        rm -rf Gemfile.lock
         sudo apt-get --assume-yes install libpq-dev
         gem install bundler:'>= 2.2.x'
-        bundle config path vendor/bundle
-        bundle config set without 'production'
-        bundle install --jobs 4 --retry 3
+        echo "BUNDLER VERSION: [$(bundler --version)]"
+
+    - name: Install Ruby dependencies With Rails ${{ matrix.rails-version }}
+      if: steps.gem-cache.outputs.cache-hit != 'true'
+      env:
+        BUNDLE_WITHOUT: production
+        BUNDLE_PATH: vendor/bundle
+        BUNDLE_JOBS: 4
+        BUNDLE_RETRY: 3
+      run: |
+        echo "BUNDLE_GEMFILE: [${BUNDLE_GEMFILE}]"
+        bundle install
 
     - name: Get yarn cache directory path
       id: yarn-cache-dir-path
@@ -123,25 +121,12 @@ jobs:
     - name: Create database
       env:
         RAILS_ENV: test
-        MATRIX_RAILS_VERSION: ${{ matrix.rails-version }}
-      run: |
-        export BUNDLE_GEMFILE="${GITHUB_WORKSPACE}/gemfiles/rails_${MATRIX_RAILS_VERSION}.gemfile"
-        echo "BUNDLE_GEMFILE: [${BUNDLE_GEMFILE}]"
-        bundle exec rails db:create db:migrate
+      run: bundle exec rails db:create db:migrate
 
     - name: Run Unit Tests
-      env:
-        MATRIX_RAILS_VERSION: ${{ matrix.rails-version }}
-      run: |
-        export BUNDLE_GEMFILE="${GITHUB_WORKSPACE}/gemfiles/rails_${MATRIX_RAILS_VERSION}.gemfile"
-        echo "BUNDLE_GEMFILE: [${BUNDLE_GEMFILE}]"
-        bundle exec rails test
+      run: bundle exec rails test
 
     - name: Run System tests
       env:
         CHROME_HEADLESS: true
-        MATRIX_RAILS_VERSION: ${{ matrix.rails-version }}
-      run: |
-        export BUNDLE_GEMFILE="${GITHUB_WORKSPACE}/gemfiles/rails_${MATRIX_RAILS_VERSION}.gemfile"
-        echo "BUNDLE_GEMFILE: [${BUNDLE_GEMFILE}]"
-        bundle exec rails test:system
+      run: bundle exec rails test:system
