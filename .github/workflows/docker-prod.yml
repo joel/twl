@@ -15,7 +15,7 @@ jobs:
         id: builder-prod
       -
         name: Cache Docker layers Prod
-        uses: actions/cache@v2.1.4
+        uses: actions/cache@v2.1.6
         with:
           path: /tmp/.buildx-cache-prod
           key: ${{ runner.os }}-buildx-prod-${{ github.sha }}
